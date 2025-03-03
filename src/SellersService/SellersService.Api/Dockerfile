@@ -7,17 +7,17 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["SellerService.Api/SellerService.Api.csproj", "SellerService.Api/"]
-RUN dotnet restore "SellerService.Api/SellerService.Api.csproj"
+COPY ["SellersService.Api/SellersService.Api.csproj", "SellersService.Api/"]
+RUN dotnet restore "SellersService.Api/SellersService.Api.csproj"
 COPY . .
-WORKDIR "/src/SellerService.Api"
-RUN dotnet build "SellerService.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
+WORKDIR "/src/SellersService.Api"
+RUN dotnet build "SellersService.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "SellerService.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "SellersService.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SellerService.Api.dll"]
+ENTRYPOINT ["dotnet", "SellersService.Api.dll"]

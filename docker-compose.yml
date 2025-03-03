@@ -2,8 +2,8 @@
   orders-service:
     image: orders-service
     build:
-      context: .
-      dockerfile: src/OrdersService/OrdersService.Api/Dockerfile
+      context: ./src/OrdersService
+      dockerfile: OrdersService.Api/Dockerfile
     ports:
       - "5172:8080"
     environment:
@@ -12,8 +12,8 @@
   sellers-service:
     image: sellers-service
     build:
-      context: .
-      dockerfile: src/SellersService/SellersService.Api/Dockerfile
+      context: ./src/SellersService
+      dockerfile: SellersService.Api/Dockerfile
     ports:
       - "5009:8080"
     environment:
@@ -22,8 +22,8 @@
   payment-service:
     image: payment-service
     build:
-      context: .
-      dockerfile: src/PaymentService/PaymentService.Api/Dockerfile
+      context: ./src/PaymentService
+      dockerfile: PaymentService.Api/Dockerfile
     ports:
       - "5289:8080"
     environment:
