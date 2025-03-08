@@ -1,7 +1,14 @@
-﻿namespace OrdersService.Api.Database.Models;
+﻿using MongoDB.Bson;
+using MongoDB.Bson.Serialization.Attributes;
+
+namespace OrdersService.Api.Database.Models;
 
 public class Buyer
 {
+    public const string CollectionName = "Buyers";
+
+    [BsonId]
+    [BsonRepresentation(BsonType.String)]
     public Guid Id { get; set; }
 
     public string Login { get; set; }

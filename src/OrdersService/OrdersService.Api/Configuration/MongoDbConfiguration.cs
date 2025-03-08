@@ -3,8 +3,6 @@
 public class MongoDbConfiguration
 {
     public static string SectionName = "OrdersDatabase";
-    
     public string ConnectionString { get; set; } = null!;
-
     public string DatabaseName { get; set; } = null!;
 }
