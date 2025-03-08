@@ -1,3 +1,5 @@
+using OrdersService.Api.Configuration;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -6,6 +8,10 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Orders Service API", Version = "v1" });
 });
+
+// Configuration
+builder.Services.Configure<MongoDbConfiguration>(
+    builder.Configuration.GetSection(MongoDbConfiguration.SectionName));
 
 var app = builder.Build();
 
