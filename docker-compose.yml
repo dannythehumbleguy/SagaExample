@@ -1,4 +1,5 @@
 ﻿services:
+  # Own services
   orders-service:
     image: orders-service
     build:
@@ -8,6 +9,8 @@
       - "5172:8080"
     environment:
       - ASPNETCORE_HTTP_PORTS=8080
+    depends_on:
+      - orders-mongodb
 
   sellers-service:
     image: sellers-service
@@ -18,6 +21,8 @@
       - "5009:8080"
     environment:
       - ASPNETCORE_HTTP_PORTS=8080
+    depends_on:
+      - sellers-mongodb
 
   payment-service:
     image: payment-service
@@ -28,6 +33,36 @@
       - "5289:8080"
     environment:
       - ASPNETCORE_HTTP_PORTS=8080
+    depends_on:
+      - payment-mongodb
+
+  # MongoDB instances for each service
+  orders-mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - orders_mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=orders-database
+
+  sellers-mongodb:
+    image: mongo:latest
+    ports:
+      - "27018:27017"
+    volumes:
+      - sellers_mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=sellers-database
+
+  payment-mongodb:
+    image: mongo:latest
+    ports:
+      - "27019:27017"
+    volumes:
+      - payment_mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=payment-database
 
   zookeeper:
     image: bitnami/zookeeper:3.9
@@ -74,4 +109,10 @@ volumes:
   zookeeper_data:
     driver: local
   kafka_data:
+    driver: local
+  orders_mongodb_data:
+    driver: local
+  sellers_mongodb_data:
+    driver: local
+  payment_mongodb_data:
     driver: local
