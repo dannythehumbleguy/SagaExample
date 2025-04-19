@@ -5,6 +5,8 @@ namespace SellersService.Api.Database.Models;
 
 public class Product
 {
+    public const string CollectionName = "Products";
+
     [BsonRepresentation(BsonType.String)]
     public Guid Id { get; set; }
     [BsonRepresentation(BsonType.String)]

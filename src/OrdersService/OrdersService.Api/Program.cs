@@ -5,18 +5,9 @@ using OrdersService.Api.Database.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new() { Title = "Orders Service API", Version = "v1" });
-});
-
-// Configuration
+// Db
 builder.Services.Configure<MongoDbConfiguration>(
     builder.Configuration.GetSection(MongoDbConfiguration.SectionName));
-
-// Db
 builder.Services.AddSingleton<IMongoCollection<Order>>((u) =>
 {
     var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
@@ -32,6 +23,14 @@ builder.Services.AddSingleton<IMongoCollection<Buyer>>((u) =>
     var mongoDatabase = mongoClient.GetDatabase(config.CurrentValue.DatabaseName);
 
     return mongoDatabase.GetCollection<Buyer>(Buyer.CollectionName);
+});
+
+// Common
+builder.Services.AddControllers();
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new() { Title = "Orders Service API", Version = "v1" });
 });
 
 var app = builder.Build();

@@ -9,6 +9,7 @@
       - "5172:8080"
     environment:
       - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - orders-mongodb
 
@@ -21,6 +22,7 @@
       - "5009:8080"
     environment:
       - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - sellers-mongodb
 
@@ -33,6 +35,7 @@
       - "5289:8080"
     environment:
       - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_ENVIRONMENT=Development
     depends_on:
       - payment-mongodb
 

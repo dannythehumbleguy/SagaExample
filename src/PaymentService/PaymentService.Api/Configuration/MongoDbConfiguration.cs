@@ -1,4 +1,4 @@
-﻿namespace OrdersService.Api.Configuration;
+﻿namespace PaymentService.Api.Configuration;
 
 public class MongoDbConfiguration
 {
