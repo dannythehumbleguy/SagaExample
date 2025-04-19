@@ -39,7 +39,7 @@
     depends_on:
       - payment-mongodb
 
-  # MongoDB instances for each service
+  # MongoDB
   orders-mongodb:
     image: mongo:latest
     ports:
@@ -67,6 +67,35 @@
     environment:
       - MONGO_INITDB_DATABASE=payment-database
 
+  # Mongo Express
+  orders-mongo-express:
+    image: mongo-express:latest
+    ports:
+      - "8081:8081"
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://orders-mongodb:27017/orders-database
+    depends_on:
+      - orders-mongodb
+
+  sellers-mongo-express:
+    image: mongo-express:latest
+    ports:
+      - "8082:8081"
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://sellers-mongodb:27017/sellers-database
+    depends_on:
+      - sellers-mongodb
+
+  payment-mongo-express:
+    image: mongo-express:latest
+    ports:
+      - "8083:8081"
+    environment:
+      - ME_CONFIG_MONGODB_URL=mongodb://payment-mongodb:27017/payment-database
+    depends_on:
+      - payment-mongodb
+
+  # Kafka
   zookeeper:
     image: bitnami/zookeeper:3.9
     ports:
