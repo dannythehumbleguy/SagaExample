@@ -1,7 +1,5 @@
-using System;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Options;
 using OrdersService.Api.Configuration;
@@ -12,7 +10,7 @@ using OrdersService.Api.Common;
 
 namespace OrdersService.Api.Services;
 
-public class AuthService(IMongoCollection<Buyer> buyers, IOptions<AuthConfiguration> authConfig) : IAuthService
+public class AuthService(IMongoCollection<Buyer> buyers, IOptions<AuthConfiguration> authConfig)
 {
     private readonly AuthConfiguration _authConfig = authConfig.Value;
 
@@ -34,8 +32,8 @@ public class AuthService(IMongoCollection<Buyer> buyers, IOptions<AuthConfigurat
             
         var token = Guid.NewGuid().ToString();
         buyer.Token = token;
-        buyer.TokenExpiresAt = DateTime.UtcNow.AddHours(24);
-        await buyers.ReplaceOneAsync(b => b.Login == buyer.Login, buyer);
+        buyer.TokenExpiresAt = DateTime.UtcNow.Add(_authConfig.TokenLiveTime);
+        await buyers.ReplaceOneAsync(b => b.Id == buyer.Id, buyer);
 
         return new AuthResponse
         {
@@ -53,7 +51,8 @@ public class AuthService(IMongoCollection<Buyer> buyers, IOptions<AuthConfigurat
         var buyer = new Buyer
         {
             Login = request.Login,
-            Password = HashPassword(request.Password)
+            Password = HashPassword(request.Password),
+            CreationDate = DateTimeOffset.UtcNow
         };
 
         await buyers.InsertOneAsync(buyer);
@@ -65,15 +64,15 @@ public class AuthService(IMongoCollection<Buyer> buyers, IOptions<AuthConfigurat
         });
     }
 
-    public async Task<bool> ValidateToken(string token)
+    public async Task<Maybe<Guid>> ValidateToken(string token)
     {
         var buyer = await buyers.Find(b => b.Token == token).FirstOrDefaultAsync();
         if (buyer == null)
-            return false;
+            return Maybe<Guid>.None;
 
         if (buyer.TokenExpiresAt <= DateTime.UtcNow)
-            return false;
+            return Maybe<Guid>.None;
         
-        return true;
+        return buyer.Id;
     }
 }

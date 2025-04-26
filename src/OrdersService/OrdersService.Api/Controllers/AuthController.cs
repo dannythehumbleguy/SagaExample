@@ -1,30 +1,18 @@
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using OrdersService.Api.Common;
 using OrdersService.Api.Models;
 using OrdersService.Api.Services;
 
 namespace OrdersService.Api.Controllers;
 
-[ApiController]
-[Route("api/[controller]")]
-public class AuthController(IAuthService authService) : ControllerBase
+public class AuthController(AuthService authService) : AbstractController
 {
     [HttpPost("register")]
-    public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
-    {
-        var result = await authService.Register(request);
-        if (result.IsFailure)
-            return BadRequest(result.Error);
-        
-        return Ok(result.Value);
-    }
+    public async Task<Results<Ok<AuthResponse>, BadRequest<Error>>> Register(RegisterRequest request) => 
+        await Wrap(authService.Register(request));
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponse>> Login(AuthRequest request)
-    {
-        var result = await authService.Authenticate(request);
-        if (result.IsFailure)
-            return Unauthorized(result.Error);
-        
-        return Ok(result.Value);
-    }
+    public async Task<Results<Ok<AuthResponse>, BadRequest<Error>>> Login(AuthRequest request) => 
+        await Wrap(authService.Authenticate(request));
 }

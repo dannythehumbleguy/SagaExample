@@ -35,7 +35,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Auth
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<AuthService>();
 builder.Services.Configure<AuthConfiguration>(
     builder.Configuration.GetSection(AuthConfiguration.SectionName));
 

@@ -10,7 +10,7 @@ using SellersService.Api.Common;
 
 namespace SellersService.Api.Services;
 
-public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfiguration> authConfig) : IAuthService
+public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfiguration> authConfig)
 {
     private readonly AuthConfiguration _authConfig = authConfig.Value;
 
@@ -36,8 +36,8 @@ public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfigur
 
         var token = Guid.NewGuid().ToString();
         seller.Token = token;
-        seller.TokenExpiresAt = DateTime.UtcNow.AddHours(24);
-        await sellers.ReplaceOneAsync(s => s.Login == seller.Login, seller);
+        seller.TokenExpiresAt = DateTime.UtcNow.Add(_authConfig.TokenLiveTime);
+        await sellers.ReplaceOneAsync(s => s.Id == seller.Id, seller);
 
         return Result.Success<AuthResponse, Error>(new AuthResponse
         {
@@ -67,15 +67,15 @@ public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfigur
         });
     }
 
-    public async Task<bool> ValidateToken(string token)
+    public async Task<Maybe<Guid>> ValidateToken(string token)
     {
         var seller = await sellers.Find(s => s.Token == token).FirstOrDefaultAsync();
         if (seller == null)
-            return false;
+            return Maybe<Guid>.None ;
 
         if (seller.TokenExpiresAt <= DateTime.UtcNow)
-            return false;
+            return Maybe<Guid>.None;
 
-        return true;
+        return seller.Id;
     }
 }

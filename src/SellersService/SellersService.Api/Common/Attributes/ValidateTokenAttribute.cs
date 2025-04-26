@@ -15,19 +15,18 @@ public class ValidateTokenAttribute : Attribute, IAsyncActionFilter
             return;
         }
 
-        var authService = context.HttpContext.RequestServices.GetService(typeof(IAuthService)) as IAuthService;
-        if (authService == null)
-        {
-            context.Result = new StatusCodeResult(500);
-            return;
-        }
-
+        await using var scope = context.HttpContext.RequestServices.CreateAsyncScope();
+        var authService = scope.ServiceProvider.GetRequiredService<AuthService>();
+        
         var tokenValue = token.ToString();
-        if (!await authService.ValidateToken(tokenValue))
+        var userId = await authService.ValidateToken(tokenValue);
+        if (userId.HasNoValue)
         {
             context.Result = new UnauthorizedResult();
             return;
         }
+        
+        context.HttpContext.Items["UserId"] = userId.Value;
 
         await next();
     }
