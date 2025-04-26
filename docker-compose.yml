@@ -67,7 +67,7 @@
     environment:
       - MONGO_INITDB_DATABASE=payment-database
 
-  # Mongo Express
+  # Mongo Express, credentials: admin/pass
   orders-mongo-express:
     image: mongo-express:latest
     ports:

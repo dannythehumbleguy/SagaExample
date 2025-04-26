@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using SellersService.Api.Common.Swagger;
 using SellersService.Api.Configuration;
 using SellersService.Api.Database.Models;
 using SellersService.Api.Services;
@@ -43,6 +44,20 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Sellers Service API", Version = "v1" });
+    
+    c.AddSecurityDefinition("Token", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Description = "Authorization header using the token. Example: \"Authorization: your-token-here\"",
+        Name = "Authorization",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey
+    });
+
+    c.OperationFilter<ValidateTokenOperationFilter>();
+
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
 });
 
 builder.Services.AddScoped<AuthService>();

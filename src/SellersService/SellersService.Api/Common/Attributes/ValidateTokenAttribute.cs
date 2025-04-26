@@ -4,6 +4,10 @@ using SellersService.Api.Services;
 
 namespace SellersService.Api.Common.Attributes;
 
+/// <summary>
+/// Атрибут для проверки токена авторизации. Если токен недействителен или отсутствует, возвращается 401 Unauthorized.
+/// Применяется к методам или контроллерам, которые требуют авторизации.
+/// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
 public class ValidateTokenAttribute : Attribute, IAsyncActionFilter
 {

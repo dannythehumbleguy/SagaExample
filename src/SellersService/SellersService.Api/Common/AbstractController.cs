@@ -22,7 +22,7 @@ public class AbstractController : ControllerBase
     private Guid GetUserId()
     {
         if (!HttpContext.Items.TryGetValue("UserId", out var userId))
-            throw new UnauthorizedAccessException("Buyer ID not found in context");
+            throw new UnauthorizedAccessException("User ID not found in context");
         
         return (Guid)userId;
     }
