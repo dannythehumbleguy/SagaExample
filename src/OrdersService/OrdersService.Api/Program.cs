@@ -2,13 +2,14 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using OrdersService.Api.Configuration;
 using OrdersService.Api.Database.Models;
+using OrdersService.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Db
 builder.Services.Configure<MongoDbConfiguration>(
     builder.Configuration.GetSection(MongoDbConfiguration.SectionName));
-builder.Services.AddSingleton<IMongoCollection<Order>>((u) =>
+builder.Services.AddSingleton<IMongoCollection<Order>>(u =>
 {
     var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
     var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
@@ -16,7 +17,7 @@ builder.Services.AddSingleton<IMongoCollection<Order>>((u) =>
 
     return mongoDatabase.GetCollection<Order>(Order.CollectionName);
 });
-builder.Services.AddSingleton<IMongoCollection<Buyer>>((u) =>
+builder.Services.AddSingleton<IMongoCollection<Buyer>>(u =>
 {
     var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
     var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
@@ -32,6 +33,11 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Orders Service API", Version = "v1" });
 });
+
+// Auth
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.Configure<AuthConfiguration>(
+    builder.Configuration.GetSection(AuthConfiguration.SectionName));
 
 var app = builder.Build();
 

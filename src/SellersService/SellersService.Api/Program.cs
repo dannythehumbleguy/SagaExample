@@ -2,12 +2,15 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using SellersService.Api.Configuration;
 using SellersService.Api.Database.Models;
+using SellersService.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configuration
 builder.Services.Configure<MongoDbConfiguration>(
     builder.Configuration.GetSection(MongoDbConfiguration.SectionName));
+builder.Services.Configure<AuthConfiguration>(
+    builder.Configuration.GetSection(AuthConfiguration.SectionName));
 // Db
 builder.Services.AddSingleton<IMongoCollection<Product>>((u) =>
 {
@@ -41,6 +44,8 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Sellers Service API", Version = "v1" });
 });
+
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 

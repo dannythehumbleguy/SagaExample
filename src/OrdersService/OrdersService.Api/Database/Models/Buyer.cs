@@ -16,4 +16,5 @@ public class Buyer
     public string Token { get; set; }
     
     public DateTimeOffset CreationDate { get; set; }
+    public DateTimeOffset TokenExpiresAt { get; set; }
 }
