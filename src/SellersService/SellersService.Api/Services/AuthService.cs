@@ -4,7 +4,6 @@ using CSharpFunctionalExtensions;
 using Microsoft.Extensions.Options;
 using SellersService.Api.Configuration;
 using SellersService.Api.Models;
-using SellersService.Api.Database.Models;
 using MongoDB.Driver;
 using SellersService.Api.Common;
 
@@ -13,26 +12,15 @@ namespace SellersService.Api.Services;
 public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfiguration> authConfig)
 {
     private readonly AuthConfiguration _authConfig = authConfig.Value;
-
-    private string HashPassword(string password)
-    {
-        using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_authConfig.SecretKey));
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hash);
-    }
-
+    
     public async Task<Result<AuthResponse, Error>> Authenticate(AuthRequest request)
     {
         var seller = await sellers.Find(s => s.Login == request.Login).FirstOrDefaultAsync();
         if (seller == null)
-        {
             return Result.Failure<AuthResponse, Error>(new Error("User not found"));
-        }
 
         if (seller.Password != HashPassword(request.Password))
-        {
             return Result.Failure<AuthResponse, Error>(new Error("Invalid login or password"));
-        }
 
         var token = Guid.NewGuid().ToString();
         seller.Token = token;
@@ -77,5 +65,12 @@ public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfigur
             return Maybe<Guid>.None;
 
         return seller.Id;
+    }
+    
+    private string HashPassword(string password)
+    {
+        using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_authConfig.SecretKey));
+        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+        return Convert.ToBase64String(hash);
     }
 }

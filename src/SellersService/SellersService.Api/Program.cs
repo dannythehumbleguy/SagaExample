@@ -2,7 +2,8 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using SellersService.Api.Common.Swagger;
 using SellersService.Api.Configuration;
-using SellersService.Api.Database.Models;
+using SellersService.Api.Models;
+using SellersService.Api.Repositories;
 using SellersService.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,7 +14,7 @@ builder.Services.Configure<MongoDbConfiguration>(
 builder.Services.Configure<AuthConfiguration>(
     builder.Configuration.GetSection(AuthConfiguration.SectionName));
 // Db
-builder.Services.AddSingleton<IMongoCollection<Product>>((u) =>
+builder.Services.AddSingleton<IMongoCollection<Product>>(u =>
 {
     var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
     var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
@@ -21,7 +22,7 @@ builder.Services.AddSingleton<IMongoCollection<Product>>((u) =>
 
     return mongoDatabase.GetCollection<Product>(Product.CollectionName);
 });
-builder.Services.AddSingleton<IMongoCollection<Seller>>((u) =>
+builder.Services.AddSingleton<IMongoCollection<Seller>>(u =>
 {
     var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
     var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
@@ -29,7 +30,7 @@ builder.Services.AddSingleton<IMongoCollection<Seller>>((u) =>
 
     return mongoDatabase.GetCollection<Seller>(Seller.CollectionName);
 });
-builder.Services.AddSingleton<IMongoCollection<StockDeduction>>((u) =>
+builder.Services.AddSingleton<IMongoCollection<StockDeduction>>(u =>
 {
     var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
     var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
@@ -40,7 +41,6 @@ builder.Services.AddSingleton<IMongoCollection<StockDeduction>>((u) =>
 
 // Common
 builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Sellers Service API", Version = "v1" });
@@ -61,6 +61,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<ProductRepository>();
 
 var app = builder.Build();
 

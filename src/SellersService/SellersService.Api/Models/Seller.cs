@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace SellersService.Api.Database.Models;
+namespace SellersService.Api.Models;
 
 public class Seller
 {
@@ -15,6 +15,7 @@ public class Seller
     public string Password { get; set; }
     public string Token { get; set; }
     
-    public DateTimeOffset CreationDate { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset UpdatedAt { get; set; }
     public DateTimeOffset TokenExpiresAt { get; set; }
 }
