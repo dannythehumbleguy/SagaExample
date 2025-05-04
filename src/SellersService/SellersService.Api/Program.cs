@@ -2,7 +2,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using SellersService.Api.Common.Swagger;
 using SellersService.Api.Configuration;
-using SellersService.Api.Models;
+using SellersService.Api.Database;
 using SellersService.Api.Repositories;
 using SellersService.Api.Services;
 
@@ -13,31 +13,14 @@ builder.Services.Configure<MongoDbConfiguration>(
     builder.Configuration.GetSection(MongoDbConfiguration.SectionName));
 builder.Services.Configure<AuthConfiguration>(
     builder.Configuration.GetSection(AuthConfiguration.SectionName));
+
 // Db
-builder.Services.AddSingleton<IMongoCollection<Product>>(u =>
+builder.Services.AddSingleton<IMongoClient>(u =>
 {
     var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
-    var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
-    var mongoDatabase = mongoClient.GetDatabase(config.CurrentValue.DatabaseName);
-
-    return mongoDatabase.GetCollection<Product>(Product.CollectionName);
+    return new MongoClient(config.CurrentValue.ConnectionString);
 });
-builder.Services.AddSingleton<IMongoCollection<Seller>>(u =>
-{
-    var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
-    var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
-    var mongoDatabase = mongoClient.GetDatabase(config.CurrentValue.DatabaseName);
-
-    return mongoDatabase.GetCollection<Seller>(Seller.CollectionName);
-});
-builder.Services.AddSingleton<IMongoCollection<StockDeduction>>(u =>
-{
-    var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
-    var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
-    var mongoDatabase = mongoClient.GetDatabase(config.CurrentValue.DatabaseName);
-
-    return mongoDatabase.GetCollection<StockDeduction>(StockDeduction.CollectionName);
-});
+builder.Services.AddScoped<DbContext>();
 
 // Common
 builder.Services.AddControllers();
@@ -62,6 +45,7 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProductRepository>();
+builder.Services.AddScoped<StockDeductionRepository>();
 
 var app = builder.Build();
 

@@ -2,11 +2,12 @@
 using MongoDB.Driver;
 using SellersService.Api.Common;
 using SellersService.Api.Common.Pagination;
+using SellersService.Api.Database;
 using SellersService.Api.Models;
 
 namespace SellersService.Api.Repositories;
 
-public class ProductRepository(IMongoCollection<Product> dbProducts)
+public class ProductRepository(DbContext db)
 {
     public async Task<Result<Paged<ProductDto>, Error>> GetProducts(PaginationRequest form)
     {
@@ -16,7 +17,7 @@ public class ProductRepository(IMongoCollection<Product> dbProducts)
                 Builders<Product>.Filter.Empty,
                 Builders<Product>.Filter.Eq(p => p.DeletedAt, null));
             
-            var result = await dbProducts.ToPagedResultAsync(filter, form);
+            var result = await db.Products.ToPagedResultAsync(filter, form);
             return new Paged<ProductDto>(
                 result.Items.Select(p => new ProductDto(p)).ToList(),
                 result.TotalCount,
@@ -38,7 +39,7 @@ public class ProductRepository(IMongoCollection<Product> dbProducts)
                 Builders<Product>.Filter.Eq(p => p.SellerId, sellerId),
                 Builders<Product>.Filter.Eq(p => p.DeletedAt, null)
             );
-            var result = await dbProducts.ToPagedResultAsync(filter, form);
+            var result = await db.Products.ToPagedResultAsync(filter, form);
             return new Paged<ProductDto>(
                 result.Items.Select(p => new ProductDto(p)).ToList(),
                 result.TotalCount,
@@ -67,7 +68,7 @@ public class ProductRepository(IMongoCollection<Product> dbProducts)
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await dbProducts.InsertOneAsync(product);
+            await db.Products.InsertOneAsync(product);
             return product.Id;
         }
         catch (Exception ex)
@@ -99,7 +100,7 @@ public class ProductRepository(IMongoCollection<Product> dbProducts)
             var updateQuery = Builders<Product>.Update.Combine(updates);
             
 
-            var result = await dbProducts.UpdateOneAsync(filter, updateQuery);
+            var result = await db.Products.UpdateOneAsync(filter, updateQuery);
             
             if (result.MatchedCount == 0)
                 return new Error("Product not found or you don't have permission to update it");
@@ -125,7 +126,7 @@ public class ProductRepository(IMongoCollection<Product> dbProducts)
                 .Set(p => p.DeletedAt, DateTimeOffset.UtcNow)
                 .Set(p => p.UpdatedAt, DateTimeOffset.UtcNow);
 
-            var result = await dbProducts.UpdateOneAsync(filter, update);
+            var result = await db.Products.UpdateOneAsync(filter, update);
             
             if (result.MatchedCount == 0)
                 return new Error("Product not found or you don't have permission to delete it");

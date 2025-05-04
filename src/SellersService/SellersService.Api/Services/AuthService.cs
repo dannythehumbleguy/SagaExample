@@ -6,16 +6,17 @@ using SellersService.Api.Configuration;
 using SellersService.Api.Models;
 using MongoDB.Driver;
 using SellersService.Api.Common;
+using SellersService.Api.Database;
 
 namespace SellersService.Api.Services;
 
-public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfiguration> authConfig)
+public class AuthService(DbContext db, IOptions<AuthConfiguration> authConfig)
 {
     private readonly AuthConfiguration _authConfig = authConfig.Value;
     
     public async Task<Result<AuthResponse, Error>> Authenticate(AuthRequest request)
     {
-        var seller = await sellers.Find(s => s.Login == request.Login).FirstOrDefaultAsync();
+        var seller = await db.Sellers.Find(s => s.Login == request.Login).FirstOrDefaultAsync();
         if (seller == null)
             return Result.Failure<AuthResponse, Error>(new Error("User not found"));
 
@@ -25,7 +26,7 @@ public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfigur
         var token = Guid.NewGuid().ToString();
         seller.Token = token;
         seller.TokenExpiresAt = DateTime.UtcNow.Add(_authConfig.TokenLiveTime);
-        await sellers.ReplaceOneAsync(s => s.Id == seller.Id, seller);
+        await db.Sellers.ReplaceOneAsync(s => s.Id == seller.Id, seller);
 
         return Result.Success<AuthResponse, Error>(new AuthResponse
         {
@@ -36,7 +37,7 @@ public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfigur
 
     public async Task<Result<AuthResponse, Error>> Register(RegisterRequest request)
     {
-        var existingSeller = await sellers.Find(s => s.Login == request.Login).FirstOrDefaultAsync();
+        var existingSeller = await db.Sellers.Find(s => s.Login == request.Login).FirstOrDefaultAsync();
         if (existingSeller != null)
             return new Error("User with this login already exists");
         
@@ -46,7 +47,7 @@ public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfigur
             Password = HashPassword(request.Password),
         };
 
-        await sellers.InsertOneAsync(seller);
+        await db.Sellers.InsertOneAsync(seller);
 
         return await Authenticate(new AuthRequest
         {
@@ -57,7 +58,7 @@ public class AuthService(IMongoCollection<Seller> sellers, IOptions<AuthConfigur
 
     public async Task<Maybe<Guid>> ValidateToken(string token)
     {
-        var seller = await sellers.Find(s => s.Token == token).FirstOrDefaultAsync();
+        var seller = await db.Sellers.Find(s => s.Token == token).FirstOrDefaultAsync();
         if (seller == null)
             return Maybe<Guid>.None ;
 

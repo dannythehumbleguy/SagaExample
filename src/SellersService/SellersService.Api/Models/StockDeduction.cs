@@ -18,6 +18,7 @@ public class StockDeduction
     
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public DateTimeOffset? RevertedAt { get; set; }
 }
 
 public class StockDeductionItem
