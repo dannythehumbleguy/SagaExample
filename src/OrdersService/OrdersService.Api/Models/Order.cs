@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace OrdersService.Api.Database.Models;
+namespace OrdersService.Api.Models;
 
 public class Order
 {
@@ -19,10 +19,25 @@ public class Order
     public Guid BuyerId { get; set; }
     
     [BsonRepresentation(BsonType.String)]
-    public Guid TransactionId { get; set; }
+    public Guid? TransactionId { get; set; }
     
     [BsonRepresentation(BsonType.String)]
-    public Guid StockDeductionId  { get; set; }
+    public Guid? StockDeductionId  { get; set; }
     
-    public DateTimeOffset CreationDate { get; set; }
+    public DateTimeOffset OrderedAt { get; set; }
+}
+
+
+public class OrderDto
+{
+    public Guid Id { get; set; }
+    public OrderStatus Status { get; set; }
+    public List<ProductDto> Products { get; set; }
+    
+    public DateTimeOffset OrderedAt { get; set; }
+}
+
+public class OrderProductsForm
+{
+    public List<ProductDto> Products { get; set; }
 }

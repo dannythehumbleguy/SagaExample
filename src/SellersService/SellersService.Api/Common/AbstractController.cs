@@ -12,7 +12,7 @@ public class AbstractController : ControllerBase
     {
         var result = await task;
         if (result.IsFailure)
-            TypedResults.BadRequest(result.Error);
+            return TypedResults.BadRequest(result.Error);
         
         return TypedResults.Ok(result.Value);
     }

@@ -11,8 +11,8 @@ public class AbstractController : ControllerBase
     protected async Task<Results<Ok<T>, BadRequest<Error>>> Wrap<T>(Task<Result<T, Error>> task)
     {
         var result = await task;
-        if (task.IsFaulted)
-            TypedResults.BadRequest(result.Error);
+        if (result.IsFailure)
+            return TypedResults.BadRequest(result.Error);
         
         return TypedResults.Ok(result.Value);
     }

@@ -1,35 +1,33 @@
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using OrdersService.Api.Common.Swagger;
 using OrdersService.Api.Configuration;
-using OrdersService.Api.Database.Models;
+using OrdersService.Api.Database;
+using OrdersService.Api.Repositories;
 using OrdersService.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Db
+// Configuration
 builder.Services.Configure<MongoDbConfiguration>(
     builder.Configuration.GetSection(MongoDbConfiguration.SectionName));
-builder.Services.AddSingleton<IMongoCollection<Order>>(u =>
+builder.Services.Configure<AuthConfiguration>(
+    builder.Configuration.GetSection(AuthConfiguration.SectionName));
+
+// Db
+builder.Services.AddSingleton<IMongoClient>(u =>
 {
     var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
-    var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
-    var mongoDatabase = mongoClient.GetDatabase(config.CurrentValue.DatabaseName);
-
-    return mongoDatabase.GetCollection<Order>(Order.CollectionName);
+    return new MongoClient(config.CurrentValue.ConnectionString);
 });
-builder.Services.AddSingleton<IMongoCollection<Buyer>>(u =>
-{
-    var config = u.GetRequiredService<IOptionsMonitor<MongoDbConfiguration>>();
-    var mongoClient = new MongoClient(config.CurrentValue.ConnectionString);
-    var mongoDatabase = mongoClient.GetDatabase(config.CurrentValue.DatabaseName);
-
-    return mongoDatabase.GetCollection<Buyer>(Buyer.CollectionName);
-});
+builder.Services.AddScoped<DbContext>();
 
 // Common
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Orders Service API", Version = "v1" });
@@ -49,10 +47,9 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(xmlPath);
 });
 
-// Auth
+// Services
 builder.Services.AddScoped<AuthService>();
-builder.Services.Configure<AuthConfiguration>(
-    builder.Configuration.GetSection(AuthConfiguration.SectionName));
+builder.Services.AddScoped<OrderRepository>();
 
 var app = builder.Build();
 
@@ -62,7 +59,6 @@ app.UseSwaggerUI(c =>
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "Orders Service API V1");
     c.RoutePrefix = "swagger";
 });
-
 
 app.UseRouting();
 app.UseHttpsRedirection();

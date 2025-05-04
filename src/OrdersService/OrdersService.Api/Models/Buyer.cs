@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace OrdersService.Api.Database.Models;
+namespace OrdersService.Api.Models;
 
 public class Buyer
 {

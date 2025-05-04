@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using SellersService.Api.Common.Swagger;
@@ -23,7 +24,10 @@ builder.Services.AddSingleton<IMongoClient>(u =>
 builder.Services.AddScoped<DbContext>();
 
 // Common
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+});
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new() { Title = "Sellers Service API", Version = "v1" });
