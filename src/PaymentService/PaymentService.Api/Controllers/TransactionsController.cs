@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
-using PaymentService.Api.Database.Models;
+using PaymentService.Api.Models;
 
 namespace PaymentService.Api.Controllers;
 

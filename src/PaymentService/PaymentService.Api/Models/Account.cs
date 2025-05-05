@@ -1,7 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace PaymentService.Api.Database.Models;
+namespace PaymentService.Api.Models;
 
 public class Account
 {
@@ -19,5 +19,11 @@ public class Account
     // In coins
     public long Money { get; set; }
     
-    public DateTimeOffset CreationDate { get; set; }
+    public DateTimeOffset CreationAt { get; set; }
+}
+
+public class AccountDto
+{
+    public Guid UserId { get; set; }
+    public long Money { get; set; }
 }

@@ -10,24 +10,6 @@ public static class MongoDbPaginationExtensions
     {
         return query.Skip(request.Skip()).Limit(request.PageSize);
     }
-
-    public static Paged<TDocument> ToPagedResult<TDocument>(
-        this IMongoCollection<TDocument> collection,
-        FilterDefinition<TDocument> filter,
-        PaginationRequest request)
-    {
-        var totalCount = collection.CountDocuments(filter);
-        var items = collection.Find(filter)
-            .Skip(request.Skip())
-            .Limit(request.PageSize)
-            .ToList();
-                
-        return new Paged<TDocument>(
-            items, 
-            totalCount, 
-            request.PageNumber, 
-            request.PageSize);
-    }
  
     public static async Task<Paged<TDocument>> ToPagedResultAsync<TDocument>(
         this IMongoCollection<TDocument> collection,

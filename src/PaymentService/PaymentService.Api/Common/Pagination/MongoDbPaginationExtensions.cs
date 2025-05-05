@@ -1,6 +1,6 @@
 using MongoDB.Driver;
 
-namespace OrdersService.Api.Common.Pagination;
+namespace PaymentService.Api.Common.Pagination;
 
 public static class MongoDbPaginationExtensions
 {
