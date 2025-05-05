@@ -64,7 +64,7 @@ public class AccountRepository(DbContext db)
                 .Push(a => a.Transactions, transaction);
 
             await db.Accounts.UpdateOneAsync(a => a.Id == account.Id, update);
-            return Result.Success<Guid, Error>(transaction.Id);
+            return transaction.Id;
         }
         catch (Exception ex)
         {
