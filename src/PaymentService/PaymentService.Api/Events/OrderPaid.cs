@@ -1,6 +1,8 @@
-﻿namespace PaymentService.Api.Events;
+﻿using PaymentService.Api.Common.Kafka;
 
-public class OrderPaid
+namespace PaymentService.Api.Events;
+
+public class OrderPaid : IKafkaFlowMessage
 {
     public Guid OrderId { get; set; }
     public Guid TransactionId { get; set; }

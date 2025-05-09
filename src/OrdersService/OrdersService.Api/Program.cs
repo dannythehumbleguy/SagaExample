@@ -1,9 +1,12 @@
 using System.Text.Json.Serialization;
+using KafkaFlow;
+using KafkaFlow.Serializer;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using OrdersService.Api.Common.Swagger;
-using OrdersService.Api.Configuration;
+using OrdersService.Api.Common.Auth;
+using OrdersService.Api.Common.Kafka;
 using OrdersService.Api.Database;
+using OrdersService.Api.Events;
 using OrdersService.Api.Repositories;
 using OrdersService.Api.Services;
 
@@ -47,6 +50,22 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(xmlPath);
 });
 
+// Kafka
+var kafkaConfiguration = builder.Configuration.GetSection(KafkaConfiguration.SectionName).Get<KafkaConfiguration>();
+builder.Services.AddKafka(kafka => kafka
+    .UseConsoleLog()
+    .AddCluster(cluster => cluster
+        .WithBrokers([kafkaConfiguration.BootstrapServices])
+        .CreateTopicIfNotExists(kafkaConfiguration.UserEventsTopic, 1, 1)
+        .AddProducer<BuyerRegistered>(producer => producer
+            .DefaultTopic(kafkaConfiguration.UserEventsTopic)
+            .AddMiddlewares(m => m
+                .AddSerializer<JsonCoreSerializer, CustomMessageTypeResolver>()
+            )
+        )
+    )
+);
+
 // Services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<OrderRepository>();
@@ -65,4 +84,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+var kafkaBus = app.Services.CreateKafkaBus();
+await kafkaBus.StartAsync();
+
+await app.RunAsync();

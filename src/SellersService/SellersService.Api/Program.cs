@@ -1,9 +1,12 @@
 using System.Text.Json.Serialization;
+using KafkaFlow;
+using KafkaFlow.Serializer;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using SellersService.Api.Common.Swagger;
-using SellersService.Api.Configuration;
+using SellersService.Api.Common.Auth;
+using SellersService.Api.Common.Kafka;
 using SellersService.Api.Database;
+using SellersService.Api.Events;
 using SellersService.Api.Repositories;
 using SellersService.Api.Services;
 
@@ -47,6 +50,23 @@ builder.Services.AddSwaggerGen(c =>
     c.IncludeXmlComments(xmlPath);
 });
 
+// Kafka
+var kafkaConfiguration = builder.Configuration.GetSection(KafkaConfiguration.SectionName).Get<KafkaConfiguration>();
+builder.Services.AddKafka(kafka => kafka
+    .UseConsoleLog()
+    .AddCluster(cluster => cluster
+        .WithBrokers([kafkaConfiguration.BootstrapServices])
+        .CreateTopicIfNotExists(kafkaConfiguration.UserEventsTopic, 1, 1)
+        .AddProducer<SellerRegistered>(producer => producer
+            .DefaultTopic(kafkaConfiguration.UserEventsTopic)
+            .AddMiddlewares(m => m
+                .AddSerializer<JsonCoreSerializer, CustomMessageTypeResolver>()
+            )
+        )
+    )
+);
+
+// Services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddScoped<StockDeductionRepository>();
@@ -65,4 +85,7 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 
-app.Run();
+var kafkaBus = app.Services.CreateKafkaBus();
+await kafkaBus.StartAsync();
+
+await app.RunAsync();

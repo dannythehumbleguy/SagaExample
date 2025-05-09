@@ -1,6 +1,8 @@
-﻿namespace SellersService.Api.Events;
+﻿using SellersService.Api.Common.Kafka;
 
-public class StockDeductionRefused
+namespace SellersService.Api.Events;
+
+public class StockDeductionRefused : IKafkaFlowMessage
 {
     public Guid OrderId { get; set; }
     public string Reason { get; set; }

@@ -1,6 +1,8 @@
-﻿namespace OrdersService.Api.Events;
+﻿using OrdersService.Api.Common.Kafka;
 
-public class OrderCanceled
+namespace OrdersService.Api.Events;
+
+public class OrderCanceled : IKafkaFlowMessage
 {
     public Guid OrderId { get; set; }
 }

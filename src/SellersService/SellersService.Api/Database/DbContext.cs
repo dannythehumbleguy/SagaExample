@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using SellersService.Api.Configuration;
 using SellersService.Api.Models;
 
 namespace SellersService.Api.Database;

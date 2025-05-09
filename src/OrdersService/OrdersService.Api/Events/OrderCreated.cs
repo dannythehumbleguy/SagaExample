@@ -1,6 +1,8 @@
-﻿namespace OrdersService.Api.Events;
+﻿using OrdersService.Api.Common.Kafka;
 
-public class OrderCreated
+namespace OrdersService.Api.Events;
+
+public class OrderCreated : IKafkaFlowMessage
 {
     public Guid OrderId { get; set; }
     public Guid BuyerId { get; set; }

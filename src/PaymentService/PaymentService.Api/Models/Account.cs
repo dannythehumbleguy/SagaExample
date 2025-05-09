@@ -14,6 +14,8 @@ public class Account
     [BsonRepresentation(BsonType.String)]
     public Guid UserId { get; set; }
 
+    public string AccountType { get; set; }
+
     public List<Transaction> Transactions { get; set; }
     
     // In coins

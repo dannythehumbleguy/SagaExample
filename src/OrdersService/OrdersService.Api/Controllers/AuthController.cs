@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using OrdersService.Api.Common;
-using OrdersService.Api.Common.Attributes;
+using OrdersService.Api.Common.Auth;
 using OrdersService.Api.Models;
 using OrdersService.Api.Services;
 

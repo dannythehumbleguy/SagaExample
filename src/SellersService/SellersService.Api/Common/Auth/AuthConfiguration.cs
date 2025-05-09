@@ -1,4 +1,4 @@
-namespace OrdersService.Api.Configuration;
+namespace SellersService.Api.Common.Auth;
 
 public class AuthConfiguration
 {

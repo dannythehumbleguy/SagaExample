@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using PaymentService.Api.Configuration;
 using PaymentService.Api.Models;
 
 namespace PaymentService.Api.Database;

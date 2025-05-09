@@ -21,7 +21,7 @@ public class AccountRepository(DbContext db)
         };
     }
     
-    public async Task<Result<Guid, Error>> CreateAccount(Guid userId)
+    public async Task<Result<Guid, Error>> CreateAccount(Guid userId, string accountType)
     {
         try
         {
@@ -29,6 +29,7 @@ public class AccountRepository(DbContext db)
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
+                AccountType = accountType,
                 Money = 0,
                 Transactions = new List<Transaction>(),
                 CreationAt = DateTimeOffset.UtcNow

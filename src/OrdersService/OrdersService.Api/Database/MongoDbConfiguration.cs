@@ -1,4 +1,4 @@
-﻿namespace OrdersService.Api.Configuration;
+﻿namespace OrdersService.Api.Database;
 
 public class MongoDbConfiguration
 {

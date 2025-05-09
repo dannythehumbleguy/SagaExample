@@ -1,16 +1,18 @@
 using System.Security.Cryptography;
 using System.Text;
 using CSharpFunctionalExtensions;
+using KafkaFlow;
 using Microsoft.Extensions.Options;
-using OrdersService.Api.Configuration;
 using OrdersService.Api.Models;
 using MongoDB.Driver;
 using OrdersService.Api.Common;
+using OrdersService.Api.Common.Auth;
 using OrdersService.Api.Database;
+using OrdersService.Api.Events;
 
 namespace OrdersService.Api.Services;
 
-public class AuthService(DbContext db, IOptions<AuthConfiguration> authConfig)
+public class AuthService(DbContext db, IOptions<AuthConfiguration> authConfig, IMessageProducer<BuyerRegistered> messageProducer)
 {
     private readonly AuthConfiguration _authConfig = authConfig.Value;
 
@@ -53,19 +55,17 @@ public class AuthService(DbContext db, IOptions<AuthConfiguration> authConfig)
             Id = Guid.NewGuid(),
             Login = request.Login,
             Password = HashPassword(request.Password),
-            CreationDate = DateTimeOffset.UtcNow
+            CreatedAt = DateTimeOffset.UtcNow,
+            Token = Guid.NewGuid().ToString(),
+            TokenExpiresAt = DateTime.UtcNow.Add(_authConfig.TokenLiveTime)
         };
 
         await db.Buyers.InsertOneAsync(buyer);
-
-        var token = Guid.NewGuid().ToString();
-        buyer.Token = token;
-        buyer.TokenExpiresAt = DateTime.UtcNow.Add(_authConfig.TokenLiveTime);
-        await db.Buyers.ReplaceOneAsync(b => b.Id == buyer.Id, buyer);
+        await messageProducer.ProduceAsync(buyer.Id.ToString(), new BuyerRegistered(buyer.Id, "Buyer"));
 
         return new AuthResponse
         {
-            Token = token,
+            Token = buyer.Token,
             ExpiresAt = buyer.TokenExpiresAt
         };
     }

@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using SellersService.Api.Common;
-using SellersService.Api.Common.Attributes;
+using SellersService.Api.Common.Auth;
 using SellersService.Api.Common.Pagination;
 using SellersService.Api.Models;
 using SellersService.Api.Repositories;

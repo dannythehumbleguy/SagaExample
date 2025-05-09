@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using OrdersService.Api.Services;
 
-namespace OrdersService.Api.Common.Attributes;
+namespace OrdersService.Api.Common.Auth;
 
 /// <summary>
 /// Атрибут для проверки токена авторизации. Если токен недействителен или отсутствует, возвращается 401 Unauthorized.

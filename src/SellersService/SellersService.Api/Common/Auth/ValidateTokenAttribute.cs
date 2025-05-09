@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using SellersService.Api.Services;
 
-namespace SellersService.Api.Common.Attributes;
+namespace SellersService.Api.Common.Auth;
 
 /// <summary>
 /// Атрибут для проверки токена авторизации. Если токен недействителен или отсутствует, возвращается 401 Unauthorized.

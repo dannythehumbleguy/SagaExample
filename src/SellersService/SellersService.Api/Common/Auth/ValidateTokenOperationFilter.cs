@@ -1,9 +1,8 @@
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using SellersService.Api.Common.Attributes;
 
-namespace SellersService.Api.Common.Swagger;
+namespace SellersService.Api.Common.Auth;
 
 public class ValidateTokenOperationFilter : IOperationFilter
 {

@@ -1,4 +1,4 @@
-﻿namespace SellersService.Api.Configuration;
+﻿namespace SellersService.Api.Database;
 
 public class MongoDbConfiguration
 {
