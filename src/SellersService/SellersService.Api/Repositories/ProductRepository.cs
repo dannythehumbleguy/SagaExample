@@ -9,7 +9,7 @@ namespace SellersService.Api.Repositories;
 
 public class ProductRepository(DbContext db)
 {
-    public async Task<Result<Paged<ProductDto>, Error>> GetProducts(PaginationRequest form)
+    public async Task<Result<Paged<ProductDto>, Error>> GetProducts(PaginationRequest request)
     {
         try
         {
@@ -17,7 +17,7 @@ public class ProductRepository(DbContext db)
                 Builders<Product>.Filter.Empty,
                 Builders<Product>.Filter.Eq(p => p.DeletedAt, null));
             
-            var result = await db.Products.ToPagedResultAsync(filter, form);
+            var result = await db.Products.ToPagedResultAsync(filter, request);
             return new Paged<ProductDto>(
                 result.Items.Select(p => new ProductDto(p)).ToList(),
                 result.TotalCount,
@@ -31,7 +31,7 @@ public class ProductRepository(DbContext db)
         }
     }
 
-    public async Task<Result<Paged<ProductDto>, Error>> GetProducts(Guid sellerId, PaginationRequest form)
+    public async Task<Result<Paged<ProductDto>, Error>> GetProducts(Guid sellerId, PaginationRequest request)
     {
         try
         {
@@ -39,7 +39,7 @@ public class ProductRepository(DbContext db)
                 Builders<Product>.Filter.Eq(p => p.SellerId, sellerId),
                 Builders<Product>.Filter.Eq(p => p.DeletedAt, null)
             );
-            var result = await db.Products.ToPagedResultAsync(filter, form);
+            var result = await db.Products.ToPagedResultAsync(filter, request);
             return new Paged<ProductDto>(
                 result.Items.Select(p => new ProductDto(p)).ToList(),
                 result.TotalCount,

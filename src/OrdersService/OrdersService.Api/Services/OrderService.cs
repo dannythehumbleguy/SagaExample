@@ -11,9 +11,9 @@ public class OrderService(OrderRepository orderRepository,
     IMessageProducer<OrderCreated> orderCreatedProducer, 
     IMessageProducer<OrderCanceled> orderCanceledProducer)
 {
-    public async Task<Result<Guid, Error>> OrderProducts(Guid buyerId, OrderProductsForm form)
+    public async Task<Result<Guid, Error>> OrderProducts(Guid buyerId, OrderProductsRequest request)
     {
-        var order = await orderRepository.OrderProducts(buyerId, form);
+        var order = await orderRepository.OrderProducts(buyerId, request);
         if (order.IsFailure)
             return order.Error;
         

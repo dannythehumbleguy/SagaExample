@@ -22,14 +22,14 @@ public class Transaction
 }
 
 
-public class PayForOrderForm
+public class PayForOrderRequest
 {
     public Guid UserId { get; set; }
     public Guid OrderId { get; set; }
     public long Amount { get; set; }
 }
 
-public class ChangeBalanceForm
+public class ChangeBalanceRequest
 {
     public Guid UserId { get; set; }
     public long Amount { get; set; }

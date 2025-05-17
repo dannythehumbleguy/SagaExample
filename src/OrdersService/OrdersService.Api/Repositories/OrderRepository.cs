@@ -34,14 +34,14 @@ public class OrderRepository(DbContext db)
         );
     }
     
-    public async Task<Result<Order, Error>> OrderProducts(Guid userId, OrderProductsForm form)
+    public async Task<Result<Order, Error>> OrderProducts(Guid userId, OrderProductsRequest request)
     {
         var order = new Order
         {
             Id = Guid.NewGuid(),
             BuyerId = userId,
             Status = OrderStatus.Created,
-            Products = form.Products.Select(p => new Product
+            Products = request.Products.Select(p => new Product
             {
                 ProductId = p.ProductId,
                 OrderedAmount = p.OrderedAmount

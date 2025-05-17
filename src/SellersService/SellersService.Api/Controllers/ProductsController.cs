@@ -16,16 +16,16 @@ public class ProductsController(ProductRepository productRepository) : AbstractC
     /// Returns products for buyers
     /// </summary>
     [HttpGet]
-    public async Task<Results<Ok<Paged<ProductDto>>, BadRequest<Error>>> GetProducts([FromQuery] PaginationRequest form) => 
-        await Wrap(productRepository.GetProducts(form));
+    public async Task<Results<Ok<Paged<ProductDto>>, BadRequest<Error>>> GetProducts([FromQuery] PaginationRequest request) => 
+        await Wrap(productRepository.GetProducts(request));
     
     /// <summary>
     /// Returns sellers products
     /// </summary>
     [ValidateToken]
     [HttpGet("seller")]
-    public async Task<Results<Ok<Paged<ProductDto>>, BadRequest<Error>>> GetSellerProducts([FromQuery] PaginationRequest form) => 
-        await Wrap(productRepository.GetProducts(UserId, form));
+    public async Task<Results<Ok<Paged<ProductDto>>, BadRequest<Error>>> GetSellerProducts([FromQuery] PaginationRequest request) => 
+        await Wrap(productRepository.GetProducts(UserId, request));
     
     /// <summary>
     /// Creates a product

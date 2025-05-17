@@ -14,6 +14,6 @@ public class AccountController(AccountRepository accountRepository) : AbstractCo
         await Wrap(accountRepository.GetAccount(userId));
     
     [HttpPost("balance")]
-    public async Task<Results<Ok<Guid>, BadRequest<Error>>> ChangeBalance([FromBody] ChangeBalanceForm form) => 
-        await Wrap(accountRepository.ChangeBalance(form));
+    public async Task<Results<Ok<Guid>, BadRequest<Error>>> ChangeBalance([FromBody] ChangeBalanceRequest request) => 
+        await Wrap(accountRepository.ChangeBalance(request));
 }

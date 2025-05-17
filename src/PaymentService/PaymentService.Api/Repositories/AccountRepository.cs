@@ -44,24 +44,24 @@ public class AccountRepository(DbContext db)
         }
     }
     
-    public async Task<Result<Guid, Error>> ChangeBalance(ChangeBalanceForm form)
+    public async Task<Result<Guid, Error>> ChangeBalance(ChangeBalanceRequest request)
     {
         try
         {
-            var account = await db.Accounts.Find(a => a.UserId == form.UserId).FirstOrDefaultAsync();
+            var account = await db.Accounts.Find(a => a.UserId == request.UserId).FirstOrDefaultAsync();
             if (account == null)
                 return new Error("Account not found");
             
             var transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
-                Amount = form.Amount,
+                Amount = request.Amount,
                 Reason = "Balance changed manually",
                 CreationAt = DateTimeOffset.UtcNow
             };
 
             var update = Builders<Account>.Update
-                .Inc(a => a.Money, form.Amount)
+                .Inc(a => a.Money, request.Amount)
                 .Push(a => a.Transactions, transaction);
 
             await db.Accounts.UpdateOneAsync(a => a.Id == account.Id, update);
@@ -73,29 +73,29 @@ public class AccountRepository(DbContext db)
         }
     }
     
-    public async Task<Result<Guid, Error>> PayForOrder(PayForOrderForm form)
+    public async Task<Result<Guid, Error>> PayForOrder(PayForOrderRequest request)
     {
         try
         {
-            var account = await db.Accounts.Find(a => a.UserId == form.UserId).FirstOrDefaultAsync();
+            var account = await db.Accounts.Find(a => a.UserId == request.UserId).FirstOrDefaultAsync();
             if (account == null)
                 return new Error("Account not found");
 
-            if (account.Money < form.Amount)
+            if (account.Money < request.Amount)
                 return new Error("Insufficient funds");
             
 
             var transaction = new Transaction
             {
                 Id = Guid.NewGuid(),
-                OrderId = form.OrderId,
-                Amount = -form.Amount,
-                Reason = $"Payment for the order {form.OrderId}",
+                OrderId = request.OrderId,
+                Amount = -request.Amount,
+                Reason = $"Payment for the order {request.OrderId}",
                 CreationAt = DateTimeOffset.UtcNow
             };
 
             var update = Builders<Account>.Update
-                .Inc(a => a.Money, -form.Amount)
+                .Inc(a => a.Money, -request.Amount)
                 .Push(a => a.Transactions, transaction);
 
             await db.Accounts.UpdateOneAsync(a => a.Id == account.Id, update);

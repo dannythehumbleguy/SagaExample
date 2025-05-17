@@ -14,12 +14,12 @@ namespace OrdersService.Api.Controllers;
 public class OrdersController(OrderService orderService, OrderRepository orderRepository) : AbstractController
 {
     [HttpGet]
-    public async Task<Paged<OrderDto>> GetOrders([FromQuery] PaginationRequest form) => 
-        await orderRepository.GetOrders(UserId, form);
+    public async Task<Paged<OrderDto>> GetOrders([FromQuery] PaginationRequest request) => 
+        await orderRepository.GetOrders(UserId, request);
     
     [HttpPost]
-    public async Task<Results<Ok<Guid>, BadRequest<Error>>> OrderProducts([FromBody] OrderProductsForm form) =>
-        await Wrap(orderService.OrderProducts(UserId, form));
+    public async Task<Results<Ok<Guid>, BadRequest<Error>>> OrderProducts([FromBody] OrderProductsRequest request) =>
+        await Wrap(orderService.OrderProducts(UserId, request));
 
     [HttpPatch("cancel/{orderId:guid}")]
     public async Task<Results<Ok<Guid>, BadRequest<Error>>> CancelOrder([FromRoute] Guid orderId) =>

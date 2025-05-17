@@ -45,7 +45,7 @@ public class OrderDto
     public DateTimeOffset OrderedAt { get; set; }
 }
 
-public class OrderProductsForm
+public class OrderProductsRequest
 {
     public List<ProductDto> Products { get; set; }
 }
