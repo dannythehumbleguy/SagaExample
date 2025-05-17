@@ -7,6 +7,7 @@ using SellersService.Api.Common.Auth;
 using SellersService.Api.Common.Kafka;
 using SellersService.Api.Database;
 using SellersService.Api.Events;
+using SellersService.Api.Handlers;
 using SellersService.Api.Repositories;
 using SellersService.Api.Services;
 
@@ -63,6 +64,40 @@ builder.Services.AddKafka(kafka => kafka
                 .AddSerializer<JsonCoreSerializer, CustomMessageTypeResolver>()
             )
         )
+    
+        .CreateTopicIfNotExists(kafkaConfiguration.OrderEventsTopic, 1, 1)
+        .AddConsumer(consumer => consumer
+            .Topic(kafkaConfiguration.OrderEventsTopic)
+            .WithGroupId("SellersService.OrderEventsConsumer")
+            .WithBufferSize(100)
+            .WithWorkersCount(10)
+            .AddMiddlewares(u => u
+                .Add<ErrorMiddleware>()
+                .AddDeserializer<JsonCoreDeserializer, CustomMessageTypeResolver>()
+                .AddTypedHandlers(v => v
+                    .AddHandler<OrderCanceledHandler>()
+                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                )
+                .AddTypedHandlers(v => v
+                    .AddHandler<OrderCreatedHandler>()
+                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                )
+            )
+        )
+        .AddConsumer(consumer => consumer
+            .Topic(kafkaConfiguration.PaymentEventsTopic)
+            .WithGroupId("SellersService.PaymentEventsConsumer")
+            .WithBufferSize(100)
+            .WithWorkersCount(10)
+            .AddMiddlewares(u => u
+                .Add<ErrorMiddleware>()
+                .AddDeserializer<JsonCoreDeserializer, CustomMessageTypeResolver>()
+                .AddTypedHandlers(v => v
+                    .AddHandler<PaymentDeclinedHandler>()
+                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                )
+            )
+        )
     )
 );
 
@@ -70,6 +105,7 @@ builder.Services.AddKafka(kafka => kafka
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProductRepository>();
 builder.Services.AddScoped<StockDeductionRepository>();
+builder.Services.AddScoped<ProductService>();
 
 var app = builder.Build();
 

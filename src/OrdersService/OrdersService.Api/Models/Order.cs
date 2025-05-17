@@ -13,6 +13,7 @@ public class Order
     
     [BsonRepresentation(BsonType.String)]
     public OrderStatus Status { get; set; }
+    public string? CancelReason { get; set; }
     public List<Product> Products { get; set; }
     
     [BsonRepresentation(BsonType.String)]
@@ -25,6 +26,13 @@ public class Order
     public Guid? StockDeductionId  { get; set; }
     
     public DateTimeOffset OrderedAt { get; set; }
+}
+
+public enum OrderStatus
+{
+    Created = 0,
+    Payed = 1,
+    Canceled = 2,
 }
 
 

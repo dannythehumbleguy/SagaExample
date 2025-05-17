@@ -21,6 +21,8 @@ public class Product
     public DateTimeOffset? DeletedAt { get; set; }
 }
 
+// Responses and Requests
+
 public class ProductDto
 {
     public Guid Id { get; set; }
@@ -36,14 +38,9 @@ public class ProductDto
         Price = product.Price;
         Amount = product.Amount;
     }
-
-    protected ProductDto()
-    {
-        
-    }
 }
 
-public class UpdateProductForm
+public class UpdateProductRequest
 {
     public Guid Id { get; set; }
     public string? Name { get; set; }
@@ -51,7 +48,7 @@ public class UpdateProductForm
     public int? Amount { get; set; }
 }
 
-public class CreateProductForm
+public class CreateProductRequest
 {
     public string Name { get; set; }
     public int Price { get; set; }

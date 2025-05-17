@@ -53,7 +53,7 @@ public class ProductRepository(DbContext db)
         }
     }
 
-    public async Task<Result<Guid, Error>> CreateProduct(Guid sellerId, CreateProductForm form)
+    public async Task<Result<Guid, Error>> CreateProduct(Guid sellerId, CreateProductRequest request)
     {
         try
         {
@@ -61,9 +61,9 @@ public class ProductRepository(DbContext db)
             {
                 Id = Guid.NewGuid(),
                 SellerId = sellerId,
-                Name = form.Name,
-                Price = form.Price,
-                Amount = form.Amount,
+                Name = request.Name,
+                Price = request.Price,
+                Amount = request.Amount,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -77,12 +77,12 @@ public class ProductRepository(DbContext db)
         }
     }
 
-    public async Task<Result<Guid, Error>> UpdateProduct(Guid sellerId, UpdateProductForm form)
+    public async Task<Result<Guid, Error>> UpdateProduct(Guid sellerId, UpdateProductRequest request)
     {
         try
         {
             var filter = Builders<Product>.Filter.And(
-                Builders<Product>.Filter.Eq(p => p.Id, form.Id),
+                Builders<Product>.Filter.Eq(p => p.Id, request.Id),
                 Builders<Product>.Filter.Eq(p => p.SellerId, sellerId),
                 Builders<Product>.Filter.Eq(p => p.DeletedAt, null)
             );
@@ -90,12 +90,12 @@ public class ProductRepository(DbContext db)
             var updates = new List<UpdateDefinition<Product>>
             { Builders<Product>.Update.Set(p => p.UpdatedAt, DateTimeOffset.UtcNow) };
 
-            if (form.Name   != null) 
-                updates.Add(Builders<Product>.Update.Set(p => p.Name,   form.Name));
-            if (form.Amount != null) 
-                updates.Add(Builders<Product>.Update.Set(p => p.Amount, form.Amount));
-            if (form.Price  != null) 
-                updates.Add(Builders<Product>.Update.Set(p => p.Price,  form.Price));
+            if (request.Name   != null) 
+                updates.Add(Builders<Product>.Update.Set(p => p.Name,   request.Name));
+            if (request.Amount != null) 
+                updates.Add(Builders<Product>.Update.Set(p => p.Amount, request.Amount));
+            if (request.Price  != null) 
+                updates.Add(Builders<Product>.Update.Set(p => p.Price,  request.Price));
             
             var updateQuery = Builders<Product>.Update.Combine(updates);
             
@@ -105,7 +105,7 @@ public class ProductRepository(DbContext db)
             if (result.MatchedCount == 0)
                 return new Error("Product not found or you don't have permission to update it");
 
-            return form.Id;
+            return request.Id;
         }
         catch (Exception ex)
         {

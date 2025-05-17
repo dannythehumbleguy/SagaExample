@@ -5,5 +5,5 @@ namespace PaymentService.Api.Events;
 public class PaymentDeclined : IKafkaFlowMessage
 {
     public Guid OrderId { get; set; }
-    public Guid Reason { get; set; }
+    public string Reason { get; set; }
 }

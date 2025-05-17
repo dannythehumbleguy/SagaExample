@@ -8,7 +8,7 @@ namespace SellersService.Api.Repositories;
 
 public class StockDeductionRepository(DbContext db)
 {
-    public async Task<Result<Guid, Error>> DeductStock(StockDeductionForm form)
+    public async Task<Result<DeductStockResponse, Error>> DeductStock(StockDeductionRequest request)
     {
         using var session = await db.Client.StartSessionAsync();
         session.StartTransaction();
@@ -17,16 +17,16 @@ public class StockDeductionRepository(DbContext db)
         {
             var products = await db.Products.Find(session,
                     Builders<Product>.Filter.And(Builders<Product>.Filter.Eq(p => p.DeletedAt, null),
-                        Builders<Product>.Filter.In(p => p.Id, form.Items.Select(product => product.ProductId))))
+                        Builders<Product>.Filter.In(p => p.Id, request.Items.Select(product => product.ProductId))))
                 .ToListAsync();
 
             var deduction = new StockDeduction
             {
                 Id = Guid.NewGuid(),
-                OrderId = form.OrderId,
+                OrderId = request.OrderId,
                 CreatedAt = DateTimeOffset.UtcNow,
                 UpdatedAt = DateTimeOffset.UtcNow,
-                Items = form.Items.Select(u => new StockDeductionItem
+                Items = request.Items.Select(u => new StockDeductionItem
                 {
                     ProductId = u.ProductId,
                     Amount = u.Amount,
@@ -56,7 +56,17 @@ public class StockDeductionRepository(DbContext db)
                     $"Expected to update {deduction.Items.Count} products, but only {bulkWriteResult.ModifiedCount} were modified.");
 
             await session.CommitTransactionAsync();
-            return deduction.Id;
+            
+            return new DeductStockResponse
+            {
+                DeductionId = deduction.Id,
+                Items = deduction.Items.Select(u => new DeductStockResponse.StockDeductionItem
+                {
+                    SellerId = products.FirstOrDefault(p => p.Id == u.ProductId)!.SellerId,
+                    Amount = u.Amount,
+                    Price = u.Price
+                })
+            };
         }
         catch (Exception e)
         {

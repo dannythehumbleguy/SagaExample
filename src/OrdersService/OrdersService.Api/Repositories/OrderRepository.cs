@@ -34,7 +34,7 @@ public class OrderRepository(DbContext db)
         );
     }
     
-    public async Task<Result<Guid, Error>> OrderProducts(Guid userId, OrderProductsForm form)
+    public async Task<Result<Order, Error>> OrderProducts(Guid userId, OrderProductsForm form)
     {
         var order = new Order
         {
@@ -51,28 +51,35 @@ public class OrderRepository(DbContext db)
         
         await db.Orders.InsertOneAsync(order);
         
-        return order.Id;
+        return order;
     }
 
-    public async Task<Result<Guid, Error>> CancelOrder(Guid buyerId, Guid orderId)
+    public async Task<Result<Guid, Error>> CancelOrder(Guid buyerId, Guid orderId, string reason) =>
+        await CancelOrderUniversal(buyerId, orderId, reason);
+    
+    public async Task<Result<Guid, Error>> CancelOrder(Guid orderId, string reason) =>
+        await CancelOrderUniversal(null, orderId, reason);
+
+    private async Task<Result<Guid, Error>> CancelOrderUniversal(Guid? buyerId, Guid orderId, string reason)
     {
         var filter = Builders<Order>.Filter.And(
             Builders<Order>.Filter.Eq(o => o.Id, orderId),
-            Builders<Order>.Filter.Eq(o => o.BuyerId, buyerId)
+            buyerId != null ? Builders<Order>.Filter.Eq(o => o.BuyerId, buyerId) : Builders<Order>.Filter.Empty
         );
         
         var update = Builders<Order>.Update
-            .Set(o => o.Status, OrderStatus.Canceled);
+            .Set(o => o.Status, OrderStatus.Canceled)
+            .Set(u => u.CancelReason, reason);
             
         var order = await db.Orders.FindOneAndUpdateAsync(
             filter,
             update,
             new FindOneAndUpdateOptions<Order> { ReturnDocument = ReturnDocument.After }
         );
-        
+
         if (order == null)
             return new Error("Order not found");
-            
+
         return order.Id;
     }
 }

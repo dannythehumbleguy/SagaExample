@@ -32,16 +32,16 @@ public class ProductsController(ProductRepository productRepository) : AbstractC
     /// </summary>
     [HttpPost]
     [ValidateToken]
-    public async Task<Results<Ok<Guid>, BadRequest<Error>>> CreateProduct([FromBody] CreateProductForm form) => 
-        await Wrap(productRepository.CreateProduct(UserId, form));
+    public async Task<Results<Ok<Guid>, BadRequest<Error>>> CreateProduct([FromBody] CreateProductRequest request) => 
+        await Wrap(productRepository.CreateProduct(UserId, request));
     
     /// <summary>
     /// Updates a product
     /// </summary>
     [HttpPatch]
     [ValidateToken]
-    public async Task<Results<Ok<Guid>, BadRequest<Error>>> UpdateProduct([FromBody] UpdateProductForm form) => 
-        await Wrap(productRepository.UpdateProduct(UserId, form));
+    public async Task<Results<Ok<Guid>, BadRequest<Error>>> UpdateProduct([FromBody] UpdateProductRequest request) => 
+        await Wrap(productRepository.UpdateProduct(UserId, request));
     
     /// <summary>
     /// Deletes a product

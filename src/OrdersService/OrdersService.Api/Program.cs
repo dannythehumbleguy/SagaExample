@@ -7,6 +7,7 @@ using OrdersService.Api.Common.Auth;
 using OrdersService.Api.Common.Kafka;
 using OrdersService.Api.Database;
 using OrdersService.Api.Events;
+using OrdersService.Api.Handlers;
 using OrdersService.Api.Repositories;
 using OrdersService.Api.Services;
 
@@ -63,11 +64,58 @@ builder.Services.AddKafka(kafka => kafka
                 .AddSerializer<JsonCoreSerializer, CustomMessageTypeResolver>()
             )
         )
+    
+        .CreateTopicIfNotExists(kafkaConfiguration.OrderEventsTopic, 1, 1)
+        .AddProducer<OrderCanceled>(producer => producer
+            .DefaultTopic(kafkaConfiguration.OrderEventsTopic)
+            .AddMiddlewares(m => m
+                .AddSerializer<JsonCoreSerializer, CustomMessageTypeResolver>()
+            )
+        )
+        .AddProducer<OrderCreated>(producer => producer
+            .DefaultTopic(kafkaConfiguration.OrderEventsTopic)
+            .AddMiddlewares(m => m
+                .AddSerializer<JsonCoreSerializer, CustomMessageTypeResolver>()
+            )
+        )
+        
+        .CreateTopicIfNotExists(kafkaConfiguration.SellerEventsTopic, 1, 1)
+        .AddConsumer(consumer => consumer
+            .Topic(kafkaConfiguration.SellerEventsTopic)
+            .WithGroupId("OrdersService.SellersEventsConsumer")
+            .WithBufferSize(100)
+            .WithWorkersCount(10)
+            .AddMiddlewares(u => u
+                .Add<ErrorMiddleware>()
+                .AddDeserializer<JsonCoreDeserializer, CustomMessageTypeResolver>()
+                .AddTypedHandlers(v => v
+                    .AddHandler<StockDeductionRefusedHandler>()
+                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                )
+            )
+        )
+    
+        .CreateTopicIfNotExists(kafkaConfiguration.PaymentEventsTopic, 1, 1)
+        .AddConsumer(consumer => consumer
+            .Topic(kafkaConfiguration.SellerEventsTopic)
+            .WithGroupId("OrdersService.PaymentEventsConsumer")
+            .WithBufferSize(100)
+            .WithWorkersCount(10)
+            .AddMiddlewares(u => u
+                .Add<ErrorMiddleware>()
+                .AddDeserializer<JsonCoreDeserializer, CustomMessageTypeResolver>()
+                .AddTypedHandlers(v => v
+                    .AddHandler<PaymentDeclinedHandler>()
+                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                )
+            )
+        )
     )
 );
 
 // Services
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<OrderRepository>();
 
 var app = builder.Build();
