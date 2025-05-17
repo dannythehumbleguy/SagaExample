@@ -3,6 +3,7 @@ using PaymentService.Api.Common;
 using PaymentService.Api.Database;
 using PaymentService.Api.Models;
 using MongoDB.Driver;
+using PaymentService.Api.Handlers;
 
 namespace PaymentService.Api.Repositories;
 
@@ -73,37 +74,161 @@ public class AccountRepository(DbContext db)
         }
     }
     
-    public async Task<Result<Guid, Error>> PayForOrder(PayForOrderRequest request)
+    public async Task<Result<Guid, Error>> PayForOrder(StockDeducted message)
     {
         try
         {
-            var account = await db.Accounts.Find(a => a.UserId == request.UserId).FirstOrDefaultAsync();
-            if (account == null)
-                return new Error("Account not found");
+            using var session = await db.Client.StartSessionAsync();
+            session.StartTransaction();
 
-            if (account.Money < request.Amount)
-                return new Error("Insufficient funds");
-            
-
-            var transaction = new Transaction
+            try
             {
-                Id = Guid.NewGuid(),
-                OrderId = request.OrderId,
-                Amount = -request.Amount,
-                Reason = $"Payment for the order {request.OrderId}",
-                CreationAt = DateTimeOffset.UtcNow
-            };
+                var buyerAccount = await db.Accounts.Find(a => a.UserId == message.BuyerId).FirstOrDefaultAsync();
+                if (buyerAccount == null)
+                    return new Error("Buyer account not found");
+                
+                var sellerTotals = message.Items
+                    .GroupBy(item => item.SellerId)
+                    .ToDictionary(
+                        group => group.Key,
+                        group => group.Sum(item => item.Amount * item.Price)
+                    );
+                
+                var sellerAccounts = await db.Accounts
+                    .Find(a => sellerTotals.Keys.Contains(a.UserId))
+                    .ToListAsync();
+                if (sellerAccounts.Count != sellerTotals.Count)
+                    return new Error("One or more seller accounts not found");
 
-            var update = Builders<Account>.Update
-                .Inc(a => a.Money, -request.Amount)
-                .Push(a => a.Transactions, transaction);
+                var totalOrderAmount = sellerTotals.Values.Sum();
+                if (buyerAccount.Money < totalOrderAmount)
+                    return new Error("Insufficient funds");
+                
+                var buyerTransaction = new Transaction
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = message.OrderId,
+                    Amount = -totalOrderAmount,
+                    Reason = $"Payment for the order {message.OrderId}",
+                    CreationAt = DateTimeOffset.UtcNow
+                };
+                var buyerUpdate = Builders<Account>.Update
+                    .Inc(a => a.Money, -totalOrderAmount)
+                    .Push(a => a.Transactions, buyerTransaction);
+                await db.Accounts.UpdateOneAsync(session, a => a.Id == buyerAccount.Id, buyerUpdate);
+                
+                var sellerUpdates = sellerAccounts.Select(sellerAccount =>
+                {
+                    var sellerAmount = sellerTotals[sellerAccount.UserId];
+                    var sellerTransaction = new Transaction
+                    {
+                        Id = Guid.NewGuid(),
+                        OrderId = message.OrderId,
+                        Amount = sellerAmount,
+                        Reason = $"Received payment for the order {message.OrderId}",
+                        CreationAt = DateTimeOffset.UtcNow
+                    };
 
-            await db.Accounts.UpdateOneAsync(a => a.Id == account.Id, update);
-            return transaction.Id;
+                    return new UpdateOneModel<Account>(
+                        Builders<Account>.Filter.Where(a => a.Id == sellerAccount.Id),
+                        Builders<Account>.Update
+                            .Inc(a => a.Money, sellerAmount)
+                            .Push(a => a.Transactions, sellerTransaction)
+                    );
+                }).ToList();
+
+                await db.Accounts.BulkWriteAsync(session, sellerUpdates);
+                await session.CommitTransactionAsync();
+
+                return buyerTransaction.Id;
+            }
+            catch (Exception)
+            {
+                await session.AbortTransactionAsync();
+                throw;
+            }
         }
         catch (Exception ex)
         {
-            return new Error($"Failed to pay for order: {ex.Message}");
+            return new Error($"Failed to process payment: {ex.Message}");
+        }
+    }
+
+    public async Task<Result<Guid, Error>> MakeRefund(Guid orderId)
+    {
+        try
+        {
+            using var session = await db.Client.StartSessionAsync();
+            session.StartTransaction();
+
+            try
+            {
+                var accounts = await db.Accounts
+                    .Find(a => a.Transactions.Any(t => t.OrderId == orderId))
+                    .ToListAsync();
+                if (accounts.Count == 0)
+                    return new Error("No transactions found for this order");
+                
+                // Buyer
+                var buyerAccount = accounts.FirstOrDefault(a => a.Transactions.Any(t => t.OrderId == orderId && t.Amount < 0));
+                if (buyerAccount == null )
+                    return new Error("Invalid transaction pattern found for refund");
+
+                var buyerTransaction = buyerAccount.Transactions.First(t => t.OrderId == orderId);
+                var totalRefundAmount = Math.Abs(buyerTransaction.Amount);
+                var buyerRefundTransaction = new Transaction
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = orderId,
+                    Amount = totalRefundAmount,
+                    Reason = $"Refund for order {orderId}",
+                    CreationAt = DateTimeOffset.UtcNow
+                };
+                
+                var buyerUpdate = Builders<Account>.Update
+                    .Inc(a => a.Money, totalRefundAmount)
+                    .Push(a => a.Transactions, buyerRefundTransaction);
+                await db.Accounts.UpdateOneAsync(session, a => a.Id == buyerAccount.Id, buyerUpdate);
+                
+                // Sellers
+                var sellerAccounts = accounts.Where(a => a.Transactions.Any(t => t.OrderId == orderId && t.Amount > 0)).ToList();
+                if (sellerAccounts.Count == 0)
+                    return new Error("Invalid transaction pattern found for refund");
+    
+                var sellerUpdates = sellerAccounts.Select(sellerAccount =>
+                {
+                    var sellerTransaction = sellerAccount.Transactions.First(t => t.OrderId == orderId);
+                    var sellerRefundTransaction = new Transaction
+                    {
+                        Id = Guid.NewGuid(),
+                        OrderId = orderId,
+                        Amount = -sellerTransaction.Amount,
+                        Reason = $"Refund payment for order {orderId}",
+                        CreationAt = DateTimeOffset.UtcNow
+                    };
+
+                    return new UpdateOneModel<Account>(
+                        Builders<Account>.Filter.Where(a => a.Id == sellerAccount.Id),
+                        Builders<Account>.Update
+                            .Inc(a => a.Money, -sellerTransaction.Amount)
+                            .Push(a => a.Transactions, sellerRefundTransaction)
+                    );
+                }).ToList();
+
+                await db.Accounts.BulkWriteAsync(session, sellerUpdates);
+                await session.CommitTransactionAsync();
+
+                return buyerRefundTransaction.Id;
+            }
+            catch (Exception)
+            {
+                await session.AbortTransactionAsync();
+                throw;
+            }
+        }
+        catch (Exception ex)
+        {
+            return new Error($"Failed to process refund: {ex.Message}");
         }
     }
 }

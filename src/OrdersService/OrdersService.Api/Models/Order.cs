@@ -20,7 +20,7 @@ public class Order
     public Guid BuyerId { get; set; }
     
     [BsonRepresentation(BsonType.String)]
-    public Guid? TransactionId { get; set; }
+    public Guid? BuyerTransactionId { get; set; }
     
     [BsonRepresentation(BsonType.String)]
     public Guid? StockDeductionId  { get; set; }

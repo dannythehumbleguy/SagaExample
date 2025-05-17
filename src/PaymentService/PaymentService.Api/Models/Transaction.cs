@@ -21,14 +21,6 @@ public class Transaction
     public DateTimeOffset CreationAt { get; set; }
 }
 
-
-public class PayForOrderRequest
-{
-    public Guid UserId { get; set; }
-    public Guid OrderId { get; set; }
-    public long Amount { get; set; }
-}
-
 public class ChangeBalanceRequest
 {
     public Guid UserId { get; set; }
