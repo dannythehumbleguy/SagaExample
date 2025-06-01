@@ -9,6 +9,40 @@ namespace OrdersService.Api.Repositories;
 
 public class OrderRepository(DbContext db)
 {
+    public async Task<Result<Guid, Error>> SetBuyerTransactionId(Guid orderId, Guid buyerTransactionId)
+    {
+        var filter = Builders<Order>.Filter.Eq(o => o.Id, orderId);
+        var update = Builders<Order>.Update.Set(o => o.BuyerTransactionId, buyerTransactionId);
+            
+        var order = await db.Orders.FindOneAndUpdateAsync(
+            filter,
+            update,
+            new FindOneAndUpdateOptions<Order> { ReturnDocument = ReturnDocument.After }
+        );
+
+        if (order == null)
+            return new Error($"Order with id {orderId} not found");
+
+        return order.Id;
+    }
+    
+    public async Task<Result<Guid, Error>> SetStockDeductionId(Guid orderId, Guid transactionId)
+    {
+        var filter = Builders<Order>.Filter.Eq(o => o.Id, orderId);
+        var update = Builders<Order>.Update.Set(o => o.StockDeductionId, transactionId);
+            
+        var order = await db.Orders.FindOneAndUpdateAsync(
+            filter,
+            update,
+            new FindOneAndUpdateOptions<Order> { ReturnDocument = ReturnDocument.After }
+        );
+
+        if (order == null)
+            return new Error($"Order with id {orderId} not found");
+
+        return order.Id;
+    }
+    
     public async Task<Paged<OrderDto>> GetOrders(Guid buyerId, PaginationRequest form)
     {
         var filter = Builders<Order>.Filter.Eq(o => o.BuyerId, buyerId);
@@ -55,12 +89,12 @@ public class OrderRepository(DbContext db)
     }
 
     public async Task<Result<Guid, Error>> CancelOrder(Guid buyerId, Guid orderId, string reason) =>
-        await CancelOrderUniversal(buyerId, orderId, reason);
+        await CancelOrderCommon(buyerId, orderId, reason);
     
     public async Task<Result<Guid, Error>> CancelOrder(Guid orderId, string reason) =>
-        await CancelOrderUniversal(null, orderId, reason);
+        await CancelOrderCommon(null, orderId, reason);
 
-    private async Task<Result<Guid, Error>> CancelOrderUniversal(Guid? buyerId, Guid orderId, string reason)
+    private async Task<Result<Guid, Error>> CancelOrderCommon(Guid? buyerId, Guid orderId, string reason)
     {
         var filter = Builders<Order>.Filter.And(
             Builders<Order>.Filter.Eq(o => o.Id, orderId),

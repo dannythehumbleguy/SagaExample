@@ -1,12 +1,13 @@
 ﻿using KafkaFlow;
 using OrdersService.Api.Common.Kafka;
+using OrdersService.Api.Repositories;
 
 namespace OrdersService.Api.Handlers;
 
-public class StockDeductedHandler() : IMessageHandler<StockDeducted>
+public class StockDeductedHandler(OrderRepository orderRepository) : IMessageHandler<StockDeducted>
 {
     public async Task Handle(IMessageContext context, StockDeducted message) => 
-        throw new NotImplementedException();
+        await orderRepository.SetStockDeductionId(message.OrderId, message.StockDeductionId);
 }
 
 

@@ -17,7 +17,7 @@ public class OrderService(OrderRepository orderRepository,
         if (order.IsFailure)
             return order.Error;
         
-        await orderCreatedProducer.ProduceAsync(order.Value.Id, new OrderCreated
+        await orderCreatedProducer.ProduceAsync(order.Value.Id.ToString(), new OrderCreated
         {
             OrderId = order.Value.Id,
             BuyerId = buyerId,

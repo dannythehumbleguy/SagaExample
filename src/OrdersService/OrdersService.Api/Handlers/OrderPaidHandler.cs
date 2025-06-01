@@ -1,12 +1,13 @@
 ﻿using KafkaFlow;
 using OrdersService.Api.Common.Kafka;
+using OrdersService.Api.Repositories;
 
 namespace OrdersService.Api.Handlers;
 
-public class OrderPaidHandler : IMessageHandler<OrderPaid>
+public class OrderPaidHandler(OrderRepository orderRepository) : IMessageHandler<OrderPaid>
 {
     public async Task Handle(IMessageContext context, OrderPaid message) => 
-        throw new NotImplementedException();
+        await orderRepository.SetBuyerTransactionId(message.OrderId, message.BuyerTransactionId);
 }
 
 public class OrderPaid : IKafkaFlowMessage

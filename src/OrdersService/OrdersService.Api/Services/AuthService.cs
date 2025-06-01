@@ -15,14 +15,7 @@ namespace OrdersService.Api.Services;
 public class AuthService(DbContext db, IOptions<AuthConfiguration> authConfig, IMessageProducer<BuyerRegistered> messageProducer)
 {
     private readonly AuthConfiguration _authConfig = authConfig.Value;
-
-    private string HashPassword(string password)
-    {
-        using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_authConfig.SecretKey));
-        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
-        return Convert.ToBase64String(hash);
-    }
-
+    
     public async Task<Result<AuthResponse, Error>> Authenticate(AuthRequest request)
     {
         var buyer = await db.Buyers.Find(b => b.Login == request.Login).FirstOrDefaultAsync();
@@ -80,5 +73,12 @@ public class AuthService(DbContext db, IOptions<AuthConfiguration> authConfig, I
             return Maybe<Guid>.None;
         
         return buyer.Id;
+    }
+    
+    private string HashPassword(string password)
+    {
+        using var hmac = new HMACSHA512(Encoding.UTF8.GetBytes(_authConfig.SecretKey));
+        var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+        return Convert.ToBase64String(hash);
     }
 }

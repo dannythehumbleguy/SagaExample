@@ -92,6 +92,10 @@ builder.Services.AddKafka(kafka => kafka
                     .AddHandler<StockDeductionRefusedHandler>()
                     .WithHandlerLifetime(InstanceLifetime.Scoped)
                 )
+                .AddTypedHandlers(v => v
+                    .AddHandler<StockDeductedHandler>()
+                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                )
             )
         )
     
@@ -106,6 +110,10 @@ builder.Services.AddKafka(kafka => kafka
                 .AddDeserializer<JsonCoreDeserializer, CustomMessageTypeResolver>()
                 .AddTypedHandlers(v => v
                     .AddHandler<PaymentDeclinedHandler>()
+                    .WithHandlerLifetime(InstanceLifetime.Scoped)
+                )
+                .AddTypedHandlers(v => v
+                    .AddHandler<OrderPaidHandler>()
                     .WithHandlerLifetime(InstanceLifetime.Scoped)
                 )
             )

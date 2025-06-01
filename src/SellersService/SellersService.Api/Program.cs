@@ -64,6 +64,20 @@ builder.Services.AddKafka(kafka => kafka
                 .AddSerializer<JsonCoreSerializer, CustomMessageTypeResolver>()
             )
         )
+        
+        .CreateTopicIfNotExists(kafkaConfiguration.SellerEventsTopic, 1, 1)
+        .AddProducer<StockDeducted>(producer => producer
+            .DefaultTopic(kafkaConfiguration.SellerEventsTopic)
+            .AddMiddlewares(m => m
+                .AddSerializer<JsonCoreSerializer, CustomMessageTypeResolver>()
+            )
+        )
+        .AddProducer<StockDeductionRefused>(producer => producer
+            .DefaultTopic(kafkaConfiguration.SellerEventsTopic)
+            .AddMiddlewares(m => m
+                .AddSerializer<JsonCoreSerializer, CustomMessageTypeResolver>()
+            )
+        )
     
         .CreateTopicIfNotExists(kafkaConfiguration.OrderEventsTopic, 1, 1)
         .AddConsumer(consumer => consumer

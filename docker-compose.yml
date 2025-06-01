@@ -42,30 +42,48 @@
   # MongoDB
   orders-mongodb:
     image: mongo:latest
+    command: mongod --replSet rs0-orders --bind_ip_all
     ports:
       - "27017:27017"
     volumes:
       - orders_mongodb_data:/data/db
     environment:
       - MONGO_INITDB_DATABASE=orders-database
+    healthcheck:
+      test: > 
+        mongosh --quiet --eval "try { rs.status(); } catch (e) { rs.initiate({ _id: 'rs0-orders', members: [{ _id: 0, host: 'orders-mongodb:27017' }] }); }"
+      interval: 5s
+      retries: 5
 
   sellers-mongodb:
     image: mongo:latest
+    command: mongod --replSet rs0-sellers --bind_ip_all
     ports:
       - "27018:27017"
     volumes:
       - sellers_mongodb_data:/data/db
     environment:
       - MONGO_INITDB_DATABASE=sellers-database
+    healthcheck:
+      test: >
+        mongosh --quiet --eval "try { rs.status(); } catch (e) { rs.initiate({ _id: 'rs0-sellers', members: [{ _id: 0, host: 'sellers-mongodb:27017' }] }); }"
+      interval: 5s
+      retries: 5
 
   payment-mongodb:
     image: mongo:latest
+    command: mongod --replSet rs0-payment --bind_ip_all
     ports:
       - "27019:27017"
     volumes:
       - payment_mongodb_data:/data/db
     environment:
       - MONGO_INITDB_DATABASE=payment-database
+    healthcheck:
+      test: >
+        mongosh --quiet --eval "try { rs.status(); } catch (e) { rs.initiate({ _id: 'rs0-payment', members: [{ _id: 0, host: 'payment-mongodb:27017' }] }); }"
+      interval: 5s
+      retries: 5
 
   # Mongo Express, credentials: admin/pass
   orders-mongo-express:
@@ -73,7 +91,7 @@
     ports:
       - "8081:8081"
     environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://orders-mongodb:27017/orders-database
+      - ME_CONFIG_MONGODB_URL=mongodb://orders-mongodb:27017/?replicaSet=rs0-orders
     depends_on:
       - orders-mongodb
 
@@ -82,7 +100,7 @@
     ports:
       - "8082:8081"
     environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://sellers-mongodb:27017/sellers-database
+      - ME_CONFIG_MONGODB_URL=mongodb://sellers-mongodb:27017/?replicaSet=rs0-sellers
     depends_on:
       - sellers-mongodb
 
@@ -91,7 +109,7 @@
     ports:
       - "8083:8081"
     environment:
-      - ME_CONFIG_MONGODB_URL=mongodb://payment-mongodb:27017/payment-database
+      - ME_CONFIG_MONGODB_URL=mongodb://payment-mongodb:27017/?replicaSet=rs0-payment
     depends_on:
       - payment-mongodb
 
